@@ -5,8 +5,24 @@
 
 <div id="chat-window">
 	<ul id="messages"></ul>
+
+	{% if bedrock_response_text %}
+	<div class="bedrock-response">
+		<strong>AI Response:</strong>
+		<p>{{ bedrock_response_text }}</p>
+	</div>
+	{% endif %}
 </div>
-<form id="message-form" action="#">
-	<input id="message-input" autocomplete="off" /><button>Send</button>
+
+<form method="POST" id="message-form" action="{{ url_for('main.chat') }}">
+	<input
+		id="message-input"
+		type="text"
+		name="user_input"
+		placeholder="Question..."
+		autocomplete="off"
+	/>
+	<button type="submit">Submit</button>
 </form>
+
 {% endblock %} {% block scripts %} {% endblock %}

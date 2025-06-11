@@ -1,75 +1,52 @@
 # Enterprise AI 
 
 ## Background
-This project demonstrates a simple AI orchestration pipeline by implementing a web-based chatbot. The chatbot interacts with a locally hosted Large Language Model (LLM) via the Ollama Python library. Key features include a Flask web interface for user interaction, session management for conversation history, and a resilient backend incorporating a retry mechanism for Ollama API calls. This example showcases how to orchestrate components for a conversational AI application.
+This project provides a robust foundation for building enterprise-grade conversational AI applications. The primary goal is to create a chat interface that is not only interactive and real-time but also secure, auditable, and ready for integration into a corporate environment.
+
+It leverages the power of large language models (LLMs) through AWS Bedrock, ensuring that the AI component is scalable and managed. The application is built around a secure authentication system and features a detailed audit trail, logging critical events like user connections, messages sent, and AI interactions. This makes it suitable for environments where compliance and monitoring are key requirements.
 
 ---
-## Pipeline
-The pipeline for this implementation is as follows:
 
-1.  **User Input & Interface**:
-    * The user interacts with a web page rendered by Flask.
-    * They type a message into an input field and submit the form.
-
-2.  **Backend Request Handling**:
-    * The Flask application receives the POST request at the `/` endpoint.
-    * The user's message is extracted from the form data.
-
-3.  **Session Management & Conversation History**:
-    * The application maintains the conversation history (a list of user and assistant messages) within the Flask session.
-    * The new user message is appended to this history.
-
-4.  **Prompt Preparation**:
-    * A base prompt template is read from a local file named `prompt.txt`.
-    * The user's current input (`user_text` in the code) is formatted into this template.
-
-5.  **LLM Interaction with Ollama, with retry mechanism**:
-    * The backend calls the `ollama.chat()` function to send the prepared prompt and message history to a specified Ollama model (e.g., `qwen3`).
-    * **Retry Mechanism**: This crucial step is wrapped in a retry loop.
-        * If the `ollama.chat()` call fails (e.g., due to network issues or temporary Ollama service unavailability), the application will automatically retry the call.
-        * It attempts up to `MAX_RETRIES` (configured to 3 in the code).
-        * An exponential backoff strategy is used, starting with `INITIAL_RETRY_DELAY_SECONDS` (configured to 1 second) and increasing the delay between subsequent retries. This prevents overwhelming the service.
-
-6.  **Response Processing**:
-    * If the Ollama API call is successful (within the allowed retries), the LLM's response content is extracted.
-    * If all retry attempts fail, a user-friendly error message is generated, indicating that the service could not be reached.
-
-7.  **Updating Conversation & Rendering Output**:
-    * The assistant's response (or the error message) is appended to the session's conversation history.
-    * The entire conversation is then rendered into an HTML structure.
-    * The Flask application sends the updated HTML page back to the user's browser, displaying the latest interaction.
-
-In this implementation, the Flask web server orchestrates the flow from receiving user input, managing state through sessions, interacting with the Ollama service (including handling transient errors gracefully), and presenting the conversation back to the user.
-
----
-# Steps to Run
-*Prerequisite is having python and pip installed on your machine*  
-1. Install using setup.sh  
+## Deployment
 ```bash
-chmod +x scripts/setup.sh && ./scripts/setup.sh
+pip install -r requirements.txt
+python app.py
 ```
-2. Run and monitor script with monitor.sh
-```bash
-chmod +x scripts/monitor.sh && ./scripts/monitor.sh
-```
-
-
 
 ---
 
-# Ollama Prompt
-In Ollama the following was used to create a custom prompt before passing to an LLM:
+## Configuration
+Set up an .env file with the proper variables for you to access the model. Also create a Bedrock model that accepts a prompt as input
 
-```
-You a coding assistant. Provide a detailed answer to the following question:
+---
 
-{user_text}
+## Security Documentation
+- Authentication & Authorization
+  - Session Management: User authentication is handled by Flask-Login. It manages user sessions securely, storing user IDs in a server-side signed cookie.
+  - Password Hashing: All user passwords must be hashed using a strong algorithm like Argon2 or scrypt (managed via werkzeug.security).
+  - Protected Routes: Critical routes are protected with the @login_required decorator, ensuring that only authenticated users can access the chat functionality.
+  - Audit Trail: The log_audit_event function provides a detailed log of important events, creating a security-relevant audit trail. 
+  - Web Security: Cross-Site Scripting (XSS) and Cross-Site Request Forgery (CSRF)
+  
+---
 
-Provide additional analysis including:
-1. Error Testing 
-2. Performance Evaluation
-```
-*{{user_input}} is the variable which the user will use as the input in the frontend*
+## Recommended Production Stack
+- WSGI Server: Gunicorn is a mature, stable, and widely used WSGI server for running Python web applications.
+- Reverse Proxy: Nginx should be placed in front of Gunicorn to handle incoming requests, serve static files efficiently, and manage SSL/TLS termination
+
+---
+
+## Performance Analysis
+- Key Performance Factors & Bottlenecks
+    - The primary performance bottleneck in this application is not the application code itself, but the latency of the external AI service.
+    - AI Model Latency (High Impact): The time it takes for AWS Bedrock to process the prompt and return a response is the single largest factor in perceived performance. This latency varies significantly depending on the model chosen (e.g., Claude 3 Haiku is faster than Claude 3 Opus) and the current load on the AWS service.
+    - Network Latency (Medium Impact): The round-trip time between your server and the AWS Bedrock endpoints in your selected region will add to the overall response time. Deploying your application in the same AWS region as your Bedrock service can minimize this.
+    - Application Logic (Low Impact): The Python/Flask code for processing requests, managing sessions, and emitting Socket.IO events is extremely fast and unlikely to be a bottleneck under normal load.
+    - Scalability: The application is designed to be scalable horizontally.
+    - Stateless Application: The Flask application is mostly stateless, meaning you can run multiple instances of it behind a load balancer to handle increased traffic.
+    - Scaling Gunicorn: You can scale vertically by increasing the number of Gunicorn worker processes (--workers) or horizontally by deploying more instances of the application on different machines.
+    - Scaling Socket.IO: This is a critical consideration. To run multiple Socket.IO server instances, you must implement a message queue (e.g., Redis or RabbitMQ). This allows instances to communicate and ensures that messages are correctly broadcast to all clients, regardless of which server instance they are connected to. Without a message queue, Socket.IO will not work correctly in a multi-instance deployment.
+    - AWS Bedrock Scaling: AWS Bedrock is a fully managed and auto-scaling service. It will not be a bottleneck.
 
 ---
 
