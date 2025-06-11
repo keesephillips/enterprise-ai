@@ -105,6 +105,7 @@ def handle_disconnect():
 @socketio.on('user_message')
 @login_required
 def handle_user_message(data):
+    print("helloworld")
     message_text = data.get('text', '')
     username = current_user.username
     ip_address = request.remote_addr
@@ -115,10 +116,5 @@ def handle_user_message(data):
                     username=username, 
                     ip_address=ip_address)
 
-    socketio.emit('new_chat_message', {'username': username, 'text': message_text}, broadcast=True)
-
-    if bedrock_runtime and Config.BEDROCK_PROMPT_ARN:
-        bedrock_response_text = get_bedrock_response(message_text)
-        socketio.emit('new_chat_message', {'username': 'Bedrock Bot', 'text': bedrock_response_text}, broadcast=True)
-    else:
-        socketio.emit('new_chat_message', {'username': 'System', 'text': 'Bedrock service is not configured.'}, room=request.sid)
+    bedrock_response_text = get_bedrock_response(message_text)
+    socketio.emit('new_chat_message', {'username': 'Bedrock Bot', 'text': bedrock_response_text}, broadcast=True)
