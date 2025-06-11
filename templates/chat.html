@@ -1,0 +1,12 @@
+{% extends "base.html" %} {% block title %}Chat - {{ username }}{% endblock %}
+{% block content %}
+<h2>Welcome to the Chat, {{ username }}!</h2>
+<a href="{{ url_for('auth.logout') }}">Logout</a>
+
+<div id="chat-window">
+	<ul id="messages"></ul>
+</div>
+<form id="message-form" action="#">
+	<input id="message-input" autocomplete="off" /><button>Send</button>
+</form>
+{% endblock %} {% block scripts %} {% endblock %}

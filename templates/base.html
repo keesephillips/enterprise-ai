@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-SA" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>{% block title %}Enterprise Chat{% endblock %}</title>
+		{% block head_extra %}{% endblock %}
+	</head>
+	<body>
+		<div class="container">
+			{% with messages = get_flashed_messages(with_categories=true) %} {% if
+			messages %} {% for category, message in messages %}
+			<div class="alert alert-{{ category }}">{{ message }}</div>
+			{% endfor %} {% endif %} {% endwith %} {% block content %}{% endblock %}
+		</div>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+		{% block scripts %}{% endblock %}
+	</body>
+</html>
