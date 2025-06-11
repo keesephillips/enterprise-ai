@@ -1,12 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
-	// Connect to Socket.IO server
-	// The server URL will be the same origin by default
-	var socket = io(); // [2, 3]
+	var socket = io();
 
 	socket.on("connect", function () {
 		console.log("Connected to server");
-		// Optionally, send a join message or user info
-		// socket.emit('user_join', {username: 'current_user_from_template_or_js'});
 	});
 
 	socket.on("disconnect", function () {
@@ -32,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		e.preventDefault();
 		if (input.value) {
 			socket.emit("user_message", { text: input.value }); // [2]
-			input.value = ""; // Clear input field
+			input.value = "";
 		}
 	});
 

@@ -1,7 +1,6 @@
-# app/main.py
-from flask import Blueprint, render_template, request, redirect, url_for # <--- Added redirect and url_for
+from flask import Blueprint, render_template, request, redirect, url_for 
 from flask_login import login_required, current_user
-from app import socketio # Import from app's __init__
+from app import socketio 
 import boto3
 import json
 from config.settings import Config
@@ -9,7 +8,6 @@ from.audit import log_audit_event, app_logger
 
 main_bp = Blueprint('main', __name__)
 
-# Initialize Bedrock client (ensure credentials and region are set via Config)
 bedrock_runtime = None
 if Config.AWS_ACCESS_KEY_ID and Config.AWS_SECRET_ACCESS_KEY and Config.AWS_DEFAULT_REGION:
     try:
@@ -55,12 +53,14 @@ def get_bedrock_response(user_message):
     
     try:
         app_logger.info(f"Invoking Bedrock model: {Config.BEDROCK_PROMPT_ARN} with input: {user_message[:50]}...") 
-        response = bedrock_runtime.invoke_model(
+        
+        response = bedrock.converse(
             modelId=Config.BEDROCK_PROMPT_ARN,
             contentType='application/json',
             accept='application/json',
-            body=body
+            promptVariables={PROMPT_VAR_NAME: {"text": user_text}},
         )
+        
         response_body_raw = response.get('body').read()
         response_body = json.loads(response_body_raw.decode('utf-8'))
         
